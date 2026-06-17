@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { progressService } from '@/services/progressService';
+import { upsertLesson, loadFromSupabase, deleteAllProgress } from '@/services/supabaseProgressService';
 import { ALL_MODULES } from '@/data/modules';
 import type { UserProgress, ModuleProgress, LessonProgress, ModuleStatus, LessonStatus } from '@/types';
 
@@ -21,6 +22,7 @@ interface ProgressStore {
 
   // Admin
   resetProgress: () => void;
+  hydrate: (userId: string) => Promise<void>;
 }
 
 export const useProgressStore = create<ProgressStore>((set, get) => {
@@ -100,6 +102,7 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
       );
       progressService.save(updated);
       set({ userProgress: updated });
+      upsertLesson(updated.userId, moduleId, lessonId, updated.modulesProgress[moduleId].lessonsProgress[lessonId]);
     },
 
     attemptExercise(moduleId, lessonId, answer) {
@@ -111,6 +114,7 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
       );
       progressService.save(updated);
       set({ userProgress: updated });
+      upsertLesson(updated.userId, moduleId, lessonId, updated.modulesProgress[moduleId].lessonsProgress[lessonId]);
     },
 
     revealSolution(moduleId, lessonId) {
@@ -122,6 +126,7 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
       );
       progressService.save(updated);
       set({ userProgress: updated });
+      upsertLesson(updated.userId, moduleId, lessonId, updated.modulesProgress[moduleId].lessonsProgress[lessonId]);
     },
 
     validateLesson(moduleId, lessonId) {
@@ -136,11 +141,20 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
       );
       progressService.save(updated);
       set({ userProgress: updated });
+      upsertLesson(updated.userId, moduleId, lessonId, updated.modulesProgress[moduleId].lessonsProgress[lessonId]);
     },
 
     resetProgress() {
       const fresh = progressService.reset();
+      deleteAllProgress(get().userProgress.userId);
       set({ userProgress: fresh });
+    },
+
+    async hydrate(userId) {
+      const hydrated = await loadFromSupabase(userId, get().userProgress);
+      if (!hydrated) return;
+      progressService.save(hydrated);
+      set({ userProgress: hydrated });
     },
   };
 });

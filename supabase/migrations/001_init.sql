@@ -8,9 +8,15 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy "Profil visible par le propriétaire uniquement"
-  on public.profiles for all
-  using (auth.uid() = id);
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'profiles' and policyname = 'Profil visible par le propriétaire uniquement'
+  ) then
+    create policy "Profil visible par le propriétaire uniquement"
+      on public.profiles for all
+      using (auth.uid() = id);
+  end if;
+end $$;
 
 -- Trigger : créer le profil automatiquement à l'inscription
 create or replace function public.handle_new_user()
@@ -49,9 +55,15 @@ create table if not exists public.lesson_progress (
 
 alter table public.lesson_progress enable row level security;
 
-create policy "Progression visible par le propriétaire uniquement"
-  on public.lesson_progress for all
-  using (auth.uid() = user_id);
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'lesson_progress' and policyname = 'Progression visible par le propriétaire uniquement'
+  ) then
+    create policy "Progression visible par le propriétaire uniquement"
+      on public.lesson_progress for all
+      using (auth.uid() = user_id);
+  end if;
+end $$;
 
 -- Trigger : mettre à jour updated_at automatiquement
 create or replace function public.set_updated_at()
@@ -62,7 +74,7 @@ begin
 end;
 $$;
 
-create trigger lesson_progress_updated_at
+create or replace trigger lesson_progress_updated_at
   before update on public.lesson_progress
   for each row execute procedure public.set_updated_at();
 
@@ -77,9 +89,15 @@ create table if not exists public.user_badges (
 
 alter table public.user_badges enable row level security;
 
-create policy "Badges visibles par le propriétaire uniquement"
-  on public.user_badges for all
-  using (auth.uid() = user_id);
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'user_badges' and policyname = 'Badges visibles par le propriétaire uniquement'
+  ) then
+    create policy "Badges visibles par le propriétaire uniquement"
+      on public.user_badges for all
+      using (auth.uid() = user_id);
+  end if;
+end $$;
 
 -- ─── Index pour les performances ───────────────────────────────────────────────
 create index if not exists idx_lesson_progress_user_id on public.lesson_progress(user_id);

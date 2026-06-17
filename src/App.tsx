@@ -7,13 +7,22 @@ import { ModulePage } from '@/pages/ModulePage';
 import { LessonPage } from '@/pages/LessonPage';
 import { AuthPage } from '@/pages/AuthPage';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useProgressStore } from '@/store/useProgressStore';
 
 export function App() {
   const init = useAuthStore((s) => s.init);
+  const user = useAuthStore((s) => s.user);
+  const hydrate = useProgressStore((s) => s.hydrate);
 
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    if (user?.id && user.id !== 'guest') {
+      hydrate(user.id);
+    }
+  }, [user?.id, hydrate]);
 
   return (
     <Routes>
