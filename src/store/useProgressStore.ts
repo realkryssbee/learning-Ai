@@ -6,6 +6,7 @@ import type { UserProgress, ModuleProgress, LessonProgress, ModuleStatus, Lesson
 
 interface ProgressStore {
   userProgress: UserProgress;
+  isDemoMode: boolean;
 
   // Read
   getModuleProgress: (moduleId: string) => ModuleProgress | undefined;
@@ -23,13 +24,18 @@ interface ProgressStore {
   // Admin
   resetProgress: () => void;
   hydrate: (userId: string) => Promise<void>;
+  setDemoMode: (enabled: boolean) => void;
 }
+
+const DEMO_MODE_KEY = 'kryssbee_demo_mode';
 
 export const useProgressStore = create<ProgressStore>((set, get) => {
   const initial = progressService.load();
+  const initialDemo = localStorage.getItem(DEMO_MODE_KEY) === 'true';
 
   return {
     userProgress: initial,
+    isDemoMode: initialDemo,
 
     getModuleProgress(moduleId) {
       return get().userProgress.modulesProgress[moduleId];
@@ -41,6 +47,14 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
 
     getModuleStatus(moduleId): ModuleStatus {
       const mp = get().userProgress.modulesProgress[moduleId];
+      if (get().isDemoMode) {
+        if (!mp) return 'available';
+        if (mp.completionPercentage === 100) return 'completed';
+        const hasStarted = Object.values(mp.lessonsProgress).some(
+          (l) => l.quizCompleted || l.exerciseAttempted,
+        );
+        return hasStarted ? 'in-progress' : 'available';
+      }
       if (!mp) return 'locked';
       if (!mp.unlocked) return 'locked';
       if (mp.completionPercentage === 100) return 'completed';
@@ -52,6 +66,10 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
 
     getLessonStatus(moduleId, lessonId): LessonStatus {
       const mp = get().userProgress.modulesProgress[moduleId];
+      if (get().isDemoMode) {
+        const lp = mp?.lessonsProgress[lessonId];
+        return lp?.validated ? 'completed' : 'available';
+      }
       if (!mp || !mp.unlocked) return 'locked';
 
       const module = ALL_MODULES.find((m) => m.id === moduleId);
@@ -142,6 +160,11 @@ export const useProgressStore = create<ProgressStore>((set, get) => {
       progressService.save(updated);
       set({ userProgress: updated });
       upsertLesson(updated.userId, moduleId, lessonId, updated.modulesProgress[moduleId].lessonsProgress[lessonId]);
+    },
+
+    setDemoMode(enabled) {
+      localStorage.setItem(DEMO_MODE_KEY, String(enabled));
+      set({ isDemoMode: enabled });
     },
 
     resetProgress() {

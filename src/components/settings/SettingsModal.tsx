@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Key, Save, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink, RotateCcw, Trash2 } from 'lucide-react';
+import { X, Key, Save, Eye, EyeOff, CheckCircle, AlertCircle, ExternalLink, RotateCcw, Trash2, Presentation } from 'lucide-react';
 import { getStoredApiKey, setStoredApiKey } from '@/lib/anthropic';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useProgressStore } from '@/store/useProgressStore';
@@ -14,7 +14,7 @@ export function SettingsModal({ open, onClose }: Props) {
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const { resetProgress } = useProgressStore();
+  const { resetProgress, isDemoMode, setDemoMode } = useProgressStore();
 
   useEffect(() => {
     if (open) {
@@ -150,6 +150,36 @@ export function SettingsModal({ open, onClose }: Props) {
                 Progression synchronisée avec Supabase. ✓
               </p>
             )}
+          </div>
+
+          {/* Demo mode */}
+          <div className="border-t border-bg-border pt-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Presentation size={14} className="text-accent" />
+                <h3 className="text-text-primary font-medium text-sm">Mode démo</h3>
+                {isDemoMode && (
+                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                    Actif
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setDemoMode(!isDemoMode)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  isDemoMode ? 'bg-accent' : 'bg-bg-border'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                    isDemoMode ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-text-secondary text-xs leading-relaxed">
+              Débloque tous les modules et toutes les leçons sans condition. Utile pour présenter la plateforme ou explorer le contenu librement.
+            </p>
           </div>
 
           {/* Reset progression */}
