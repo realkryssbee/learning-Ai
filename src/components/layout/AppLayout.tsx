@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { useProgressStore } from '@/store/useProgressStore';
-import { Presentation, X } from 'lucide-react';
+import { Unlock, X } from 'lucide-react';
 
 export function AppLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -18,7 +18,7 @@ export function AppLayout() {
         {isDemoMode && (
           <div className="flex items-center justify-between px-4 py-2 bg-accent/10 border-b border-accent/20 text-accent text-xs font-mono">
             <div className="flex items-center gap-2">
-              <Presentation size={13} />
+              <Unlock size={13} />
               <span>Mode démo actif — tous les modules sont débloqués</span>
             </div>
             <button
